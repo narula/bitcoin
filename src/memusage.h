@@ -6,6 +6,8 @@
 #define BITCOIN_MEMUSAGE_H
 
 #include "indirectmap.h"
+#include "unordered_indirect_multimap.h"
+#include "unordered_indirectmap.h"
 
 #include <stdlib.h>
 
@@ -127,6 +129,34 @@ static inline size_t DynamicUsage(const indirectmap<X, Y>& m)
 
 template<typename X, typename Y>
 static inline size_t IncrementalDynamicUsage(const indirectmap<X, Y>& m)
+{
+    return MallocUsage(sizeof(stl_tree_node<std::pair<const X*, Y> >));
+}
+
+// unordered_indirect_multimap has underlying map with pointer as key
+
+template<typename X, typename Y>
+static inline size_t DynamicUsage(const unordered_indirect_multimap<X, Y>& m)
+{
+    return MallocUsage(sizeof(stl_tree_node<std::pair<const X*, Y> >)) * m.size();
+}
+
+template<typename X, typename Y>
+static inline size_t IncrementalDynamicUsage(const unordered_indirect_multimap<X, Y>& m)
+{
+    return MallocUsage(sizeof(stl_tree_node<std::pair<const X*, Y> >));
+}
+
+// unordered_indirectmap has underlying map with pointer as key
+
+template<typename X, typename Y>
+static inline size_t DynamicUsage(const unordered_indirectmap<X, Y>& m)
+{
+    return MallocUsage(sizeof(stl_tree_node<std::pair<const X*, Y> >)) * m.size();
+}
+
+template<typename X, typename Y>
+static inline size_t IncrementalDynamicUsage(const unordered_indirectmap<X, Y>& m)
 {
     return MallocUsage(sizeof(stl_tree_node<std::pair<const X*, Y> >));
 }

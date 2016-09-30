@@ -15,6 +15,7 @@
 #include "indirectmap.h"
 #include "primitives/transaction.h"
 #include "sync.h"
+#include "unordered_indirectmap.h"
 
 #undef foreach
 #include "boost/multi_index_container.hpp"
@@ -491,6 +492,7 @@ private:
 
 public:
     indirectmap<COutPoint, const CTransaction*> mapNextTx;
+    unordered_indirectmap<uint256, std::map<uint32_t, const CTransaction*> > mapSpenders;
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
 
     /** Create a new CTxMemPool.

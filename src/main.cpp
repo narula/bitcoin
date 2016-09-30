@@ -1169,42 +1169,47 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     LOCK(pool.cs); // protect pool.mapNextTx
     BOOST_FOREACH(const CTxIn &txin, tx.vin)
     {
-        auto itConflicting = pool.mapNextTx.find(txin.prevout);
-        if (itConflicting != pool.mapNextTx.end())
-        {
-            const CTransaction *ptxConflicting = itConflicting->second;
-            if (!setConflicts.count(ptxConflicting->GetHash()))
-            {
-                // Allow opt-out of transaction replacement by setting
-                // nSequence >= maxint-1 on all inputs.
-                //
-                // maxint-1 is picked to still allow use of nLockTime by
-                // non-replaceable transactions. All inputs rather than just one
-                // is for the sake of multi-party protocols, where we don't
-                // want a single party to be able to disable replacement.
-                //
-                // The opt-out ignores descendants as anyone relying on
-                // first-seen mempool behavior should be checking all
-                // unconfirmed ancestors anyway; doing otherwise is hopelessly
-                // insecure.
-                bool fReplacementOptOut = true;
-                if (fEnableReplacement)
-                {
-                    BOOST_FOREACH(const CTxIn &txin, ptxConflicting->vin)
-                    {
-                        if (txin.nSequence < std::numeric_limits<unsigned int>::max()-1)
-                        {
-                            fReplacementOptOut = false;
-                            break;
-                        }
-                    }
-                }
-                if (fReplacementOptOut)
-                    return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
-
-                setConflicts.insert(ptxConflicting->GetHash());
-            }
-        }
+	auto it = pool.mapSpenders.find(txin.prevout.hash);
+	if (it == pool.mapSpenders.end()) {
+	    continue;
+	}
+	auto its = it->second.find(txin.prevout.n);
+	if (its == it->second.end()) {
+	    continue;
+	}
+	const CTransaction *ptxConflicting = its->second;
+	if (!setConflicts.count(ptxConflicting->GetHash()))
+	{
+	    // Allow opt-out of transaction replacement by setting
+	    // nSequence >= maxint-1 on all inputs.
+	    //
+	    // maxint-1 is picked to still allow use of nLockTime by
+	    // non-replaceable transactions. All inputs rather than just one
+	    // is for the sake of multi-party protocols, where we don't
+	    // want a single party to be able to disable replacement.
+	    //
+	    // The opt-out ignores descendants as anyone relying on
+	    // first-seen mempool behavior should be checking all
+	    // unconfirmed ancestors anyway; doing otherwise is hopelessly
+	    // insecure.
+	    bool fReplacementOptOut = true;
+	    if (fEnableReplacement)
+	    {
+		BOOST_FOREACH(const CTxIn &txin, ptxConflicting->vin)
+		{
+		    if (txin.nSequence < std::numeric_limits<unsigned int>::max()-1)
+		    {
+			fReplacementOptOut = false;
+			break;
+		    }
+		}
+	    }
+	    if (fReplacementOptOut)
+		return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
+	    
+	    setConflicts.insert(ptxConflicting->GetHash());
+	}
+	break;
     }
     }
 
@@ -1222,10 +1227,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         // do we already have it?
         bool fHadTxInCache = pcoinsTip->HaveCoinsInCache(hash);
         if (view.HaveCoins(hash)) {
-            if (!fHadTxInCache)
-                vHashTxnToUncache.push_back(hash);
-            return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-known");
-        }
+	    if (!fHadTxInCache)
+		vHashTxnToUncache.push_back(hash);
+	    return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-known");
+	}
 
         // do all inputs exist?
         // Note that this does not check for the presence of actual outputs (see the next check for that),
@@ -3070,6 +3075,7 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
             SyncWithWallets(tx, pindexNewTip);
         }
         // ... and about transactions that got confirmed:
+	// TODO(NN):  If txChanged is ONLY USED FOR WALLETs, then don't bother with it if -disablewallet
         for(unsigned int i = 0; i < txChanged.size(); i++)
             SyncWithWallets(std::get<0>(txChanged[i]), std::get<1>(txChanged[i]), std::get<2>(txChanged[i]));
 
