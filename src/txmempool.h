@@ -15,6 +15,7 @@
 #include "indirectmap.h"
 #include "primitives/transaction.h"
 #include "sync.h"
+#include "unordered_indirect_multimap.h"
 
 #undef foreach
 #include "boost/multi_index_container.hpp"
@@ -490,7 +491,13 @@ private:
     std::vector<indexed_transaction_set::const_iterator> GetSortedDepthAndScore() const;
 
 public:
+    struct Out {
+      uint32_t n;
+      const CTransaction* tx;
+    };
+
     indirectmap<COutPoint, const CTransaction*> mapNextTx;
+    unordered_indirect_multimap<uint256, Out> mapSpenders;
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
 
     /** Create a new CTxMemPool.
