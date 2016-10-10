@@ -117,6 +117,7 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
             modifyCount++;
             cachedDescendants[updateIt].insert(cit);
             // Update ancestor state for each descendant
+            LogPrintf("Calling modify with modifySigOpsCost of %d\n", updateIt->GetSigOpCost());
             mapTx.modify(cit, update_ancestor_state(updateIt->GetTxSize(), updateIt->GetModifiedFee(), 1, updateIt->GetSigOpCost()));
         }
     }
@@ -262,6 +263,7 @@ void CTxMemPool::UpdateEntryForAncestors(txiter it, const setEntries &setAncesto
         updateFee += ancestorIt->GetModifiedFee();
         updateSigOpsCost += ancestorIt->GetSigOpCost();
     }
+    LogPrintf("Calling modify with updateSigOpsCost (in UpdateEntryForAncestors) of %d\n", updateSigOpsCost);
     mapTx.modify(it, update_ancestor_state(updateSize, updateFee, updateCount, updateSigOpsCost));
 }
 
@@ -292,7 +294,9 @@ void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, b
             int64_t modifySize = -((int64_t)removeIt->GetTxSize());
             CAmount modifyFee = -removeIt->GetModifiedFee();
             int modifySigOps = -removeIt->GetSigOpCost();
+//            LogPrintf("Transaction %s with modifySigOps of %d\n", removeIt->GetTx().GetHash(), modifySigOps);
             BOOST_FOREACH(txiter dit, setDescendants) {
+                LogPrintf("Calling modify with modifySigOps (in UpdateRemoveFromMempool) of %d\n", modifySigOps);
                 mapTx.modify(dit, update_ancestor_state(modifySize, modifyFee, -1, modifySigOps));
             }
         }
