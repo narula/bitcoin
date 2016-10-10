@@ -696,12 +696,16 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
                 assert(coins && coins->IsAvailable(txin.prevout.n));
             }
             // Check whether its inputs are marked in mapSpenders.
-	    assert(mapSpenders.count(txin.prevout.hash) != 0);
+            assert(mapSpenders.count(txin.prevout.hash) != 0);
             auto it3 = mapSpenders.equal_range(txin.prevout.hash);
-	    for (auto it4 = it3.first; it4 != it3.second; ++it4) {
-		assert(it4->second.n == txin.prevout.n);
-		assert(it4->second.tx == &tx);
-	    }
+            bool found_vin = false;
+            for (auto it4 = it3.first; it4 != it3.second; ++it4) {
+                if (it4->second.n == txin.prevout.n) {
+                    found_vin = true;
+                    assert(it4->second.tx == &tx);
+                }
+                assert(found_vin);
+            }
         }
         assert(setParentCheck == GetMemPoolParents(it));
         // Verify ancestor state is correct.
