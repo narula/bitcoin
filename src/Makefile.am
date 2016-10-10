@@ -96,7 +96,6 @@ BITCOIN_CORE_H = \
   httprpc.h \
   httpserver.h \
   indirectmap.h \
-  unordered_indirect_multimap.h \
   unordered_indirectmap.h \
   init.h \
   key.h \

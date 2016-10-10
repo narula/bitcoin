@@ -153,23 +153,23 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
         if (it == mapTx.end()) {
             continue;
         }
-	auto iter = mapSpenders.find(hash);
-	if (iter == mapSpenders.end()) {
-	    continue;
-	}
+        auto iter = mapSpenders.find(hash);
+        if (iter == mapSpenders.end()) {
+            continue;
+        }
         // First calculate the children, and update setMemPoolChildren to
         // include them, and update their setMemPoolParents to include this tx.
         for (auto its = iter->second.begin(); its != iter->second.end(); ++its) {
-	    const uint256 &childHash = its->second->GetHash();
-	    txiter childIter = mapTx.find(childHash);
- 	    assert(childIter != mapTx.end());
-  	    // We can skip updating entries we've encountered before or that
-	    // are in the block (which are already accounted for).
-	    if (setChildren.insert(childIter).second && !setAlreadyIncluded.count(childHash)) {
-	        UpdateChild(it, childIter, true);
-	        UpdateParent(childIter, it, true);
-	    }
-	}
+            const uint256 &childHash = its->second->GetHash();
+            txiter childIter = mapTx.find(childHash);
+            assert(childIter != mapTx.end());
+            // We can skip updating entries we've encountered before or that
+            // are in the block (which are already accounted for).
+            if (setChildren.insert(childIter).second && !setAlreadyIncluded.count(childHash)) {
+                UpdateChild(it, childIter, true);
+                UpdateParent(childIter, it, true);
+            }
+        }
         UpdateForDescendants(it, mapMemPoolDescendantsToUpdate, setAlreadyIncluded);
     }
 }

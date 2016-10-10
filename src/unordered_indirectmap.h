@@ -6,7 +6,11 @@
 #define BITCOIN_UNORDERED_INDIRECTMAP_H
 
 #include <unordered_map>
-#include "unordered_indirect_multimap.h"
+
+template <class T>
+struct DereferencingEqual { bool operator()(const T a, const T b) const { return *a == *b; } };
+template <class T>
+struct DereferencingHash  { std::size_t operator()(const T a) const { return (*a).GetCheapHash(); } };
 
 /* Unordered map whose keys are pointers, but are compared by
  * their dereferenced values.
