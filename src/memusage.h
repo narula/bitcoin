@@ -132,20 +132,6 @@ static inline size_t IncrementalDynamicUsage(const indirectmap<X, Y>& m)
     return MallocUsage(sizeof(stl_tree_node<std::pair<const X*, Y> >));
 }
 
-// unordered_indirect_multimap has underlying map with pointer as key
-
-template<typename X, typename Y>
-static inline size_t DynamicUsage(const unordered_indirect_multimap<X, Y>& m)
-{
-    return MallocUsage(sizeof(stl_tree_node<std::pair<const X*, Y> >)) * m.size();
-}
-
-template<typename X, typename Y>
-static inline size_t IncrementalDynamicUsage(const unordered_indirect_multimap<X, Y>& m)
-{
-    return MallocUsage(sizeof(stl_tree_node<std::pair<const X*, Y> >));
-}
-
 template<typename X>
 static inline size_t DynamicUsage(const std::unique_ptr<X>& p)
 {
@@ -180,6 +166,20 @@ template<typename X, typename Y, typename Z>
 static inline size_t DynamicUsage(const boost::unordered_map<X, Y, Z>& m)
 {
     return MallocUsage(sizeof(boost_unordered_node<std::pair<const X, Y> >)) * m.size() + MallocUsage(sizeof(void*) * m.bucket_count());
+}
+
+// unordered_indirect_multimap has underlying map with pointer as key
+
+template<typename X, typename Y>
+static inline size_t DynamicUsage(const unordered_indirect_multimap<X, Y>& m)
+{
+    return MallocUsage(sizeof(boost_unordered_node<std::pair<const X*, Y> >)) * m.size() + MallocUsage(sizeof(void*) * m.bucket_count());
+}
+
+template<typename X, typename Y>
+static inline size_t IncrementalDynamicUsage(const unordered_indirect_multimap<X, Y>& m)
+{
+    return MallocUsage(sizeof(boost_unordered_node<std::pair<const X*, Y> >));
 }
 
 }

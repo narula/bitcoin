@@ -48,6 +48,7 @@ public:
     // passthrough
     bool empty() const              { return m.empty(); }
     size_type size() const          { return m.size(); }
+    size_type bucket_count() const  { return m.bucket_count(); }
     size_type max_size() const      { return m.max_size(); }
     void clear()                    { m.clear(); }
     iterator begin()                { return m.begin(); }
